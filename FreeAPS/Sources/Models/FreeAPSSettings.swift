@@ -167,6 +167,7 @@ extension FreeAPSSettings: Decodable {
 
         if let smoothGlucose = try? container.decode(Bool.self, forKey: .smoothGlucose) {
             settings.smoothGlucose = smoothGlucose
+        }
 
         if let libreViewServer = try? container.decode(Int.self, forKey: .libreViewServer) {
             settings.libreViewServer = libreViewServer
