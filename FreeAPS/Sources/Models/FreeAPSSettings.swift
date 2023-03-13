@@ -29,6 +29,7 @@ struct FreeAPSSettings: JSON, Equatable {
     var timeCap: Int = 8
     var minuteInterval: Int = 30
     var delay: Int = 60
+    var smoothGlucose: Bool = false
     var useAppleHealth: Bool = false
     var libreViewServer = 0
     var libreViewCustomServer = ""
@@ -162,6 +163,10 @@ extension FreeAPSSettings: Decodable {
         if let displayStatistics = try? container.decode(Bool.self, forKey: .displayStatistics) {
             settings.displayStatistics = displayStatistics
         }
+
+
+        if let smoothGlucose = try? container.decode(Bool.self, forKey: .smoothGlucose) {
+            settings.smoothGlucose = smoothGlucose
 
         if let libreViewServer = try? container.decode(Int.self, forKey: .libreViewServer) {
             settings.libreViewServer = libreViewServer
