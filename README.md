@@ -1,30 +1,59 @@
-# FreeAPS X
+# iAPS
 
 ## Introduction 
 
-FreeAPS X - an artificial pancreas system for iOS developed by Ivan Valkou based on [OpenAPS Reference](https://github.com/openaps/oref0) algorithms.
+iAPS - an artificial pancreas system for iOS based on [OpenAPS Reference](https://github.com/openaps/oref0) algorithms (Master 0.7.1) and Ivan Valkous stale Swift repo, freeaps.git.
 
-FreeAPS X uses original JavaScript files of oref0 and provides a user interface (UI) to control and set up the system. 
+Thousands of commits later, with many new and unique features added, the iOS app has been renamed to iAPS under a new organisation, Artificial Pancreas. 
 
+iAPS uses lot of frameworks published by the Loop community. 
 
-To use this branch : 
+## To download this repo: 
 
-git clone --branch=bdb https://github.com/Jon-b-m/freeaps.git
+In Terminal:  
+git clone --branch=main https://github.com/artificial-pancreas/iaps.git  
+cd iaps  
+xed .  
 
-The bdb branch includes my implementation of dynamic ISF, dynamic CR and some other extra features. Dyn ISF and dyn CR are off by default. 
+Or use the GitHub interface: 
+Download and open in Xcode directly using the Code button: "Open with Xcode".
+ 
 
-Please understand that this version is :
-- highly experimental
-- not approved for therapy
+Please understand that this version is:
+- highly experimental and evolving rapidly.
+- not CE approved for therapy yet
 
+# Pumps
+
+- Omnipod EROS  
+- Omnipod DASH  
+- Medtronic 515 or 715 (any firmware)  
+- Medtronic 522 or 722 (any firmware)  
+- Medtronic 523 or 723 (firmware 2.4 or lower)  
+- Medtronic Worldwide Veo 554 or 754 (firmware 2.6A or lower)  
+- Medtronic Canadian/Australian Veo 554 or 754 (firmware 2.7A or lower)   
+
+# CGM Sensors
+
+- Dexcom G5  
+- Dexcom G6   
+- Dexcom G7   
+- Libre 1   
+- Libre 2 (European)   
+- Medtronic Enlite
+- Nightscout as CGM
+
+# iPhone and iPod
+
+iAPS app runs on iPhone or iPod. An iPhone 7 or newer is recommended.
 
 # Documentation
 
-[Discord FreeAPS X - bdb branch channel](https://discord.com/channels/1020905149037813862/1021041588627062854)
+[Discord iAPS - main branch channel](https://discord.com/channels/1020905149037813862/1021041588627062854)
 
-[My Crowdin Project for translation of FreeAPS X](https://crowdin.com/project/freeaps-x)
+[My Crowdin Project for translation of iAPS](https://crowdin.com/project/freeaps-x)
 
-[Middleware code for FreeAPS X](https://github.com/Jon-b-m/middleware)
+[Middleware code for iAPS](https://github.com/Jon-b-m/middleware)
 
 [freeAPS X original github](https://github.com/ivalkou/freeaps)
 
@@ -34,11 +63,12 @@ Please understand that this version is :
 
 [OpenAPS documentation](https://openaps.readthedocs.io/en/latest/)
 
+[iAPS documentation (under development)](https://iaps-documentation.readthedocs.io/en/main/)
+
 # Contribute
 
-Code contributions as PRs are welcome! There is a need for more developers reviewing and optimizing current code and for adding new features. 
+Code contributions as PRs are welcome!
 
-Translators can click the Crowdin link above. 
+Translators can click the Crowdin link above  
 
-Code is open (and free) for everyone. For those of you who have asked about buying me a coffe for me to stay awake at night, 
-my PayPal account is jon.m@live.se (Sweden, Europe). 
+For questions or contributions: jon.m@live.se
