@@ -21,7 +21,7 @@ extension AddTempTarget {
         @Published var viewPercantage = false
         @Published var hbt: Double = 160
         @Published var saveSettings: Bool = false
-        
+
         private(set) var units: GlucoseUnits = .mmolL
 
         override func subscribe() {
@@ -31,6 +31,9 @@ extension AddTempTarget {
         }
 
         func enact() {
+            guard duration > 0 else {
+                return
+            }
             var lowTarget = low
 
             if viewPercantage {
@@ -43,7 +46,7 @@ extension AddTempTarget {
                 lowTarget = lowTarget.asMgdL
                 highTarget = highTarget.asMgdL
             }
-            
+
             let entry = TempTarget(
                 name: TempTarget.custom,
                 createdAt: date,
@@ -74,6 +77,9 @@ extension AddTempTarget {
         }
 
         func save() {
+            guard duration > 0 else {
+                return
+            }
             var lowTarget = low
 
             if viewPercantage {
