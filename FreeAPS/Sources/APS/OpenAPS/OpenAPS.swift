@@ -9,7 +9,7 @@ final class OpenAPS {
 
     private let storage: FileStorage
 
-    let coredataContext = CoreDataStack.shared.persistentContainer.newBackgroundContext()
+    let coredataContext = CoreDataStack.shared.persistentContainer.viewContext // newBackgroundContext()
 
     init(storage: FileStorage) {
         self.storage = storage
@@ -44,8 +44,6 @@ final class OpenAPS {
 
                 self.storage.save(meal, as: Monitor.meal)
 
-                let oref2_variables = self.oref2()
-
                 // iob
                 let autosens = self.loadFileFromStorage(name: Settings.autosense)
                 let iob = self.iob(
@@ -61,6 +59,9 @@ final class OpenAPS {
                 let reservoir = self.loadFileFromStorage(name: Monitor.reservoir)
 
                 let preferences = self.loadFileFromStorage(name: Settings.preferences)
+
+                // oref2
+                let oref2_variables = self.oref2()
 
                 let suggested = self.determineBasal(
                     glucose: glucose,
@@ -117,8 +118,8 @@ final class OpenAPS {
         }
     }
 
-    func oref2() -> Oref2_variables {
-        coredataContext.perform {
+    func oref2() -> RawJSON {
+        coredataContext.performAndWait {
             let now = Date()
             let preferences = storage.retrieve(OpenAPS.Settings.preferences, as: Preferences.self)
             var hbt_ = preferences?.halfBasalExerciseTarget ?? 160
@@ -193,14 +194,32 @@ final class OpenAPS {
                 let date = overrideArray.first?.date ?? Date()
                 if date.addingTimeInterval(addedMinutes.minutes.timeInterval) < Date(),
                    !unlimited
-                { useOverride = false }
-
-                newDuration = Decimal(Date().distance(to: date.addingTimeInterval(addedMinutes.minutes.timeInterval)).minutes)
+                {
+                    useOverride = false
+                    let saveToCoreData = Override(context: self.coredataContext)
+                    saveToCoreData.enabled = false
+                    saveToCoreData.date = Date()
+                    saveToCoreData.duration = 0
+                    saveToCoreData.indefinite = false
+                    saveToCoreData.percentage = Double(overridePercentage)
+                    try? self.coredataContext.save()
+                } else {
+                    newDuration = Decimal(Date().distance(to: date.addingTimeInterval(addedMinutes.minutes.timeInterval)).minutes)
+                    let saveToCoreData = Override(context: self.coredataContext)
+                    saveToCoreData.enabled = true
+                    saveToCoreData.date = Date()
+                    saveToCoreData.duration = newDuration as NSDecimalNumber
+                    saveToCoreData.indefinite = false
+                    saveToCoreData.percentage = Double(overridePercentage)
+                    try? self.coredataContext.save()
+                }
             }
 
             if newDuration < 0 {
                 newDuration = 0
-            } else { duration = newDuration }
+            } else {
+                duration = newDuration
+            }
 
             if !useOverride {
                 unlimited = true
@@ -222,10 +241,10 @@ final class OpenAPS {
 
                     if dd > 0.1 {
                         hbt_ = Decimal(hbt)
-                        isPercentageEnabled = true
-                        temptargetActive = false
-                    } else {
                         isPercentageEnabled = false
+                        temptargetActive = true
+                    } else {
+                        temptargetActive = false
                     }
                 } else if isPercentageEnabled {
                     duration_ = Int(truncating: sliderArray.first?.duration ?? 0)
@@ -236,10 +255,10 @@ final class OpenAPS {
 
                     if dd > 0.1 {
                         hbt_ = Decimal(hbt)
-                        isPercentageEnabled = false
-                        temptargetActive = true
-                    } else {
+                        isPercentageEnabled = true
                         temptargetActive = false
+                    } else {
+                        isPercentageEnabled = false
                     }
                 }
             }
@@ -260,7 +279,7 @@ final class OpenAPS {
                 )
                 storage.save(averages, as: OpenAPS.Monitor.oref2_variables)
                 print("Test time for oref2_variables: \(-now.timeIntervalSinceNow) seconds")
-                return averages
+                return self.loadFileFromStorage(name: Monitor.oref2_variables)
 
             } else {
                 let averages = Oref2_variables(
@@ -277,7 +296,7 @@ final class OpenAPS {
                     hbt: hbt_
                 )
                 storage.save(averages, as: OpenAPS.Monitor.oref2_variables)
-                return averages
+                return self.loadFileFromStorage(name: Monitor.oref2_variables)
             }
         }
     }

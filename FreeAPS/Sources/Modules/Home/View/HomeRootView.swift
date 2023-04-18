@@ -34,12 +34,12 @@ extension Home {
         @FetchRequest(
             entity: TempTargets.entity(),
             sortDescriptors: [NSSortDescriptor(key: "date", ascending: false)]
-        ) var currentTempTarget: FetchedResults<TempTargets>
+        ) var sliderTTpresets: FetchedResults<TempTargets>
 
         @FetchRequest(
             entity: TempTargetsSlider.entity(),
             sortDescriptors: [NSSortDescriptor(key: "date", ascending: false)]
-        ) var currentEnactedTempTarget: FetchedResults<TempTargetsSlider>
+        ) var enactedSliderTT: FetchedResults<TempTargetsSlider>
 
         private var numberFormatter: NumberFormatter {
             let formatter = NumberFormatter()
@@ -172,80 +172,82 @@ extension Home {
             }
         }
 
+        var tempBasalString: String? {
+            guard let tempRate = state.tempRate else {
+                return nil
+            }
+            let rateString = numberFormatter.string(from: tempRate as NSNumber) ?? "0"
+            var manualBasalString = ""
+
+            if state.apsManager.isManualTempBasal {
+                manualBasalString = NSLocalizedString(
+                    " - Manual Basal ⚠️",
+                    comment: "Manual Temp basal"
+                )
+            }
+            return rateString + NSLocalizedString(" U/hr", comment: "Unit per hour with space") + manualBasalString
+        }
+
+        var tempTargetString: String? {
+            guard let tempTarget = state.tempTarget else {
+                return nil
+            }
+            let target = tempTarget.targetBottom ?? 0
+            let unitString = targetFormatter.string(from: (tempTarget.targetBottom?.asMmolL ?? 0) as NSNumber) ?? ""
+            let rawString = (tirFormatter.string(from: (tempTarget.targetBottom ?? 0) as NSNumber) ?? "") + " " + state.units
+                .rawValue
+
+            var string = ""
+            if sliderTTpresets.first?.active ?? false {
+                let hbt = sliderTTpresets.first?.hbt ?? 0
+                string = ", " + (tirFormatter.string(from: state.infoPanelTTPercentage(hbt, target) as NSNumber) ?? "") + " %"
+            } else if enactedSliderTT.first?.enabled ?? false {
+                let hbt = enactedSliderTT.first?.hbt ?? 0
+                string = ", " + (tirFormatter.string(from: state.infoPanelTTPercentage(hbt, target) as NSNumber) ?? "") + " %"
+            }
+
+            let percentString = state
+                .units == .mmolL ? (unitString + " mmol/L" + string) : (rawString + (string == "0" ? "" : string))
+            return tempTarget.displayName + " " + percentString
+        }
+
+        var overrideString: String? {
+            guard fetchedPercent.first?.enabled ?? false else {
+                return nil
+            }
+            let percentString = "\((fetchedPercent.first?.percentage ?? 100).formatted(.number)) %"
+            let durationString = (tirFormatter.string(from: (fetchedPercent.first?.duration ?? 0) as NSNumber) ?? "") == "0" ?
+                "" : ", " + (tirFormatter.string(from: (fetchedPercent.first?.duration ?? 0) as NSNumber) ?? "") + " min"
+
+            return percentString + durationString
+        }
+
         var infoPanel: some View {
             HStack(alignment: .center) {
                 if state.pumpSuspended {
                     Text("Pump suspended")
                         .font(.system(size: 12, weight: .bold)).foregroundColor(.loopGray)
                         .padding(.leading, 8)
-                } else if let tempRate = state.tempRate {
-                    if state.apsManager.isManualTempBasal {
-                        Text(
-                            (numberFormatter.string(from: tempRate as NSNumber) ?? "0") +
-                                NSLocalizedString(" U/hr", comment: "Unit per hour with space") +
-                                NSLocalizedString(" -  Manual Basal ⚠️", comment: "Manual Temp basal")
-                        )
-                        .font(.system(size: 12, weight: .bold)).foregroundColor(.insulin)
+                } else if let tempBasalString = tempBasalString {
+                    Text(tempBasalString)
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.insulin)
                         .padding(.leading, 8)
-                    } else {
-                        Text(
-                            (numberFormatter.string(from: tempRate as NSNumber) ?? "0") +
-                                NSLocalizedString(" U/hr", comment: "Unit per hour with space")
-                        )
-                        .font(.system(size: 12, weight: .bold)).foregroundColor(.insulin)
-                        .padding(.leading, 8)
-                    }
                 }
 
-                if let tempTarget = state.tempTarget {
-                    let target_ = tempTarget.targetBottom ?? 0
-                    let unitString = targetFormatter.string(from: (tempTarget.targetBottom?.asMmolL ?? 0) as NSNumber)!
-                    if currentTempTarget.first?.active ?? false {
-                        let hbt = currentTempTarget.first?.hbt ?? 0
-                        let string = (tirFormatter.string(from: state.infoPanelTTPercentage(hbt, target_) as NSNumber) ?? "") +
-                            " %"
-                        let rawString = state.units.rawValue + (string == "0" ? "" : string + " %")
-
-                        Text(
-                            tempTarget.displayName + " " + (
-                                state.units == .mmolL ? (unitString + " mmol/L " + string) : rawString
-                            )
-                        )
-                        .font(.caption).foregroundColor(.secondary)
-                    } else if currentEnactedTempTarget.first?.enabled ?? false {
-                        let hbt = currentEnactedTempTarget.first?.hbt ?? 0
-                        let string = (tirFormatter.string(from: state.infoPanelTTPercentage(hbt, target_) as NSNumber) ?? "") +
-                            " %"
-                        let rawString = state.units.rawValue + (string == "0" ? "" : string + " %")
-
-                        Text(
-                            tempTarget.displayName + " " +
-                                (state.units == .mmolL ? (unitString + " mmol/L " + string) : rawString)
-                        )
-                        .font(.caption).foregroundColor(.secondary)
-                    } else {
-                        Text(
-                            tempTarget.displayName + " " + (
-                                state.units == .mmolL ? (unitString + " mmol/L ") : state.units.rawValue
-                            )
-                        ).font(.caption).foregroundColor(.secondary)
-                    }
+                if let tempTargetString = tempTargetString {
+                    Text(tempTargetString)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
 
                 Spacer()
 
-                if fetchedPercent.first?.enabled ?? false {
-                    Text(
-                        "\((fetchedPercent.first?.percentage ?? 100).formatted(.number)) % " +
-                            (
-                                (tirFormatter.string(from: (fetchedPercent.first?.duration ?? 0) as NSNumber) ?? "") == "0" ?
-                                    "" :
-                                    (tirFormatter.string(from: (fetchedPercent.first?.duration ?? 0) as NSNumber) ?? "") + " min"
-                            )
-                    )
-                    .font(.system(size: 12))
-                    .foregroundColor(.orange)
-                    .padding(.trailing, 8)
+                if let overrideString = overrideString {
+                    Text(overrideString)
+                        .font(.system(size: 12))
+                        .foregroundColor(.orange)
+                        .padding(.trailing, 8)
                 }
 
                 if let progress = state.bolusProgress {
