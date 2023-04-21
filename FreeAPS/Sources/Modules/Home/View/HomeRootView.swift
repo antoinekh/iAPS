@@ -201,10 +201,10 @@ extension Home {
             if sliderTTpresets.first?.active ?? false {
                 let hbt = sliderTTpresets.first?.hbt ?? 0
                 string = ", " + (tirFormatter.string(from: state.infoPanelTTPercentage(hbt, target) as NSNumber) ?? "") + " %"
-            } else if enactedSliderTT.first?.enabled ?? false {
-                let hbt = enactedSliderTT.first?.hbt ?? 0
-                string = ", " + (tirFormatter.string(from: state.infoPanelTTPercentage(hbt, target) as NSNumber) ?? "") + " %"
-            }
+            } /* else if enactedSliderTT.first?.enabled ?? false {
+                 let hbt = enactedSliderTT.first?.hbt ?? 0
+                 string = ", " + (tirFormatter.string(from: state.infoPanelTTPercentage(hbt, target) as NSNumber) ?? "") + " %"
+             } */
 
             let percentString = state
                 .units == .mmolL ? (unitString + " mmol/L" + string) : (rawString + (string == "0" ? "" : string))
@@ -216,7 +216,7 @@ extension Home {
                 return nil
             }
             let percentString = "\((fetchedPercent.first?.percentage ?? 100).formatted(.number)) %"
-            let durationString = (tirFormatter.string(from: (fetchedPercent.first?.duration ?? 0) as NSNumber) ?? "") == "0" ?
+            let durationString = (fetchedPercent.first?.indefinite ?? false) ?
                 "" : ", " + (tirFormatter.string(from: (fetchedPercent.first?.duration ?? 0) as NSNumber) ?? "") + " min"
 
             return percentString + durationString
@@ -242,7 +242,7 @@ extension Home {
                 }
 
                 Spacer()
-
+                
                 if let overrideString = overrideString {
                     Text(overrideString)
                         .font(.system(size: 12))
