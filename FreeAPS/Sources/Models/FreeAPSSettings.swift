@@ -33,6 +33,13 @@ struct FreeAPSSettings: JSON, Equatable {
     var useAppleHealth: Bool = false
     var smoothGlucose: Bool = false
     var overrideHbA1cUnit: Bool = false
+    var useAppleHealth: Bool = false
+    var libreViewServer = 0
+    var libreViewCustomServer = ""
+    var libreViewLastUploadTimestamp = 0.0
+    var libreViewLastAllowUploadGlucose = false
+    var libreViewFrequenceUploads = 0
+    var libreViewNextUploadDelta = 0.0
 }
 
 extension FreeAPSSettings: Decodable {
@@ -166,8 +173,33 @@ extension FreeAPSSettings: Decodable {
             settings.displayStatistics = displayStatistics
         }
 
+
         if let smoothGlucose = try? container.decode(Bool.self, forKey: .smoothGlucose) {
             settings.smoothGlucose = smoothGlucose
+        }
+
+        if let libreViewServer = try? container.decode(Int.self, forKey: .libreViewServer) {
+            settings.libreViewServer = libreViewServer
+        }
+
+        if let libreViewCustomServer = try? container.decode(String.self, forKey: .libreViewCustomServer) {
+            settings.libreViewCustomServer = libreViewCustomServer
+        }
+
+        if let libreViewLastUploadTimestamp = try? container.decode(Double.self, forKey: .libreViewLastUploadTimestamp) {
+            settings.libreViewLastUploadTimestamp = libreViewLastUploadTimestamp
+        }
+
+        if let libreViewLastAllowUploadGlucose = try? container.decode(Bool.self, forKey: .libreViewLastAllowUploadGlucose) {
+            settings.libreViewLastAllowUploadGlucose = libreViewLastAllowUploadGlucose
+        }
+
+        if let libreViewFrequenceUploads = try? container.decode(Int.self, forKey: .libreViewFrequenceUploads) {
+            settings.libreViewFrequenceUploads = libreViewFrequenceUploads
+        }
+
+        if let libreViewNextUploadDelta = try? container.decode(Double.self, forKey: .libreViewNextUploadDelta) {
+            settings.libreViewNextUploadDelta = libreViewNextUploadDelta
         }
 
         self = settings
