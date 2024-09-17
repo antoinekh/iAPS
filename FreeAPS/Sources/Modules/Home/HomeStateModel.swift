@@ -74,13 +74,14 @@ extension Home {
         @Published var overrideHistory: [OverrideHistory] = []
         @Published var overrides: [Override] = []
         @Published var alwaysUseColors: Bool = true
-        @Published var timeSettings: Bool = true
         @Published var useCalc: Bool = true
         @Published var minimumSMB: Decimal = 0.3
         @Published var maxBolus: Decimal = 0
         @Published var maxBolusValue: Decimal = 1
         @Published var useInsulinBars: Bool = false
         @Published var iobData: [IOBData] = []
+        @Published var carbData: Decimal = 0
+        @Published var iobs: Decimal = 0
         @Published var neg: Int = 0
         @Published var tddChange: Decimal = 0
         @Published var tddAverage: Decimal = 0
@@ -88,6 +89,8 @@ extension Home {
         @Published var tdd2DaysAgo: Decimal = 0
         @Published var tdd3DaysAgo: Decimal = 0
         @Published var tddActualAverage: Decimal = 0
+        @Published var skipGlucoseChart: Bool = false
+        @Published var displayDelta: Bool = false
 
         let coredataContext = CoreDataStack.shared.persistentContainer.viewContext
 
@@ -134,11 +137,12 @@ extension Home {
             useTargetButton = settingsManager.settings.useTargetButton
             hours = settingsManager.settings.hours
             alwaysUseColors = settingsManager.settings.alwaysUseColors
-            timeSettings = settingsManager.settings.timeSettings
             useCalc = settingsManager.settings.useCalc
             minimumSMB = settingsManager.settings.minimumSMB
             maxBolus = settingsManager.pumpSettings.maxBolus
             useInsulinBars = settingsManager.settings.useInsulinBars
+            skipGlucoseChart = settingsManager.settings.skipGlucoseChart
+            displayDelta = settingsManager.settings.displayDelta
 
             broadcaster.register(GlucoseObserver.self, observer: self)
             broadcaster.register(SuggestionObserver.self, observer: self)
@@ -271,6 +275,10 @@ extension Home {
                     if let duration = os.cancelProfile() {
                         // Update in Nightscout
                         nightscoutManager.editOverride(preset, duration, activeOveride.date ?? Date.now)
+                    }
+                } else if activeOveride.isPreset { // Because hard coded Hypo treatment isn't actually a preset
+                    if let duration = os.cancelProfile() {
+                        nightscoutManager.editOverride("📉", duration, activeOveride.date ?? Date.now)
                     }
                 } else {
                     let nsString = activeOveride.percentage.formatted() != "100" ? activeOveride.percentage
@@ -488,6 +496,8 @@ extension Home {
                 guard let self = self else { return }
                 if let data = self.provider.reasons() {
                     self.iobData = data
+                    self.carbData = data.map(\.cob).reduce(0, +)
+                    self.iobs = data.map(\.iob).reduce(0, +)
                     neg = data.filter({ $0.iob < 0 }).count * 5
                     let tdds = CoreDataStorage().fetchTDD(interval: DateFilter().tenDays)
                     let yesterday = (tdds.first(where: {
@@ -584,11 +594,12 @@ extension Home.StateModel:
         useTargetButton = settingsManager.settings.useTargetButton
         hours = settingsManager.settings.hours
         alwaysUseColors = settingsManager.settings.alwaysUseColors
-        timeSettings = settingsManager.settings.timeSettings
         useCalc = settingsManager.settings.useCalc
         minimumSMB = settingsManager.settings.minimumSMB
         maxBolus = settingsManager.pumpSettings.maxBolus
         useInsulinBars = settingsManager.settings.useInsulinBars
+        skipGlucoseChart = settingsManager.settings.skipGlucoseChart
+        displayDelta = settingsManager.settings.displayDelta
         setupGlucose()
         setupOverrideHistory()
         setupData()
